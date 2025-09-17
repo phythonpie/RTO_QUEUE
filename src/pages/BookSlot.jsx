@@ -1,6 +1,16 @@
+// src/components/BookSlot.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
+/**
+ * BookSlot
+ * - UI matches the Register page (Tailwind-based card, rounded inputs, gradients)
+ * - Date validation: no weekends, only up to 5 days in advance
+ * - 30-minute slots between 10:00 and 16:30 (skips 13:00 hour)
+ * - Pre-check for an active token and redirects to /already-booked if found
+ * - Posts to /slots and /tokens/issue on submit
+ */
 
 export default function BookSlot() {
   const navigate = useNavigate();
@@ -9,6 +19,7 @@ export default function BookSlot() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Pre-check: redirect if an active token already exists
   useEffect(() => {
     const run = async () => {
       const userId = localStorage.getItem("user_id");
@@ -18,17 +29,19 @@ export default function BookSlot() {
         const r = await axios.get(`${base}/tokens/active`, { params: { user_id: Number(userId) } });
         if (r?.data?.token_id) navigate("/already-booked", { replace: true });
       } catch (e) {
-        // ignore 404 (no active token)
+        // 404 => no active token (expected), ignore other errors in console
+        // console.debug("tokens/active check:", e?.response?.status || e.message);
       }
     };
     run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Generate slots dynamically (10:00 - 16:30 excluding 13:00)
   const generateSlots = () => {
     const slots = [];
     for (let hour = 10; hour < 17; hour++) {
-      if (hour === 13) continue;
+      if (hour === 13) continue; // lunch break
       slots.push(`${hour.toString().padStart(2, "0")}:00`);
       slots.push(`${hour.toString().padStart(2, "0")}:30`);
     }
@@ -36,6 +49,7 @@ export default function BookSlot() {
   };
   const availableSlots = generateSlots();
 
+  // Date validation: no weekends, only up to 5 days ahead, not past
   const handleDateChange = (e) => {
     const value = e.target.value;
     if (!value) {
@@ -71,6 +85,7 @@ export default function BookSlot() {
     setDate(value);
   };
 
+  // Submit booking -> create slot then issue token
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!date) {
@@ -104,6 +119,7 @@ export default function BookSlot() {
 
       navigate("/token");
     } catch (err) {
+      // If server responds 409 -> already booked
       if (err?.response?.status === 409) {
         navigate("/already-booked", { replace: true });
         setLoading(false);
@@ -116,6 +132,7 @@ export default function BookSlot() {
     }
   };
 
+  // min/max dates for date input
   const todayStr = new Date().toISOString().split("T")[0];
   const maxDay = new Date();
   maxDay.setDate(new Date().getDate() + 5);
@@ -124,22 +141,30 @@ export default function BookSlot() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-white via-sky-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-800">
       <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-2xl shadow-lg p-8 sm:p-10 dark:bg-slate-900 dark:border dark:border-slate-700">
+        {/* Left Info (hidden on small screens) */}
         <div className="hidden md:flex flex-col justify-center">
           <h3 className="text-2xl font-semibold mb-2 text-sky-700 dark:text-sky-400">Book a Slot</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
             Choose a date and an available time slot. Office hours are 10:00 – 16:30 (lunch break 13:00).
           </p>
+
           <ul className="mt-4 space-y-2 text-sm text-slate-500 dark:text-slate-400 list-disc list-inside">
             <li>Slots available for the next 5 days</li>
             <li>Office closed on Saturdays & Sundays</li>
             <li>Keep your Aadhaar and DL/RC handy during verification</li>
           </ul>
-          <p className="mt-4 text-xs text-slate-400">Tip: If you already have an active token, you'll be redirected to the token page.</p>
+
+          <p className="mt-4 text-xs text-slate-400">
+            Tip: If you already have an active token, you'll be redirected to the token page.
+          </p>
         </div>
 
+        {/* Right Form */}
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-2">Book a slot</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-300 mb-4">Select a date and pick a time slot. Slots are 30 minutes each.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-300 mb-4">
+            Select a date and pick a time slot. Slots are 30 minutes each.
+          </p>
 
           {error && (
             <div className="bg-red-50 text-red-800 dark:bg-red-900/30 p-3 rounded-lg text-sm mb-4" role="alert">
@@ -149,7 +174,9 @@ export default function BookSlot() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="date" className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">Select a Date</label>
+              <label htmlFor="date" className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
+                Select a Date
+              </label>
               <input
                 id="date"
                 type="date"
@@ -163,7 +190,9 @@ export default function BookSlot() {
 
             {date && (
               <div>
-                <label htmlFor="slot" className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">Select a Time Slot</label>
+                <label htmlFor="slot" className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
+                  Select a Time Slot
+                </label>
                 <select
                   id="slot"
                   value={slot}
@@ -172,7 +201,9 @@ export default function BookSlot() {
                 >
                   <option value="">-- Choose a Slot --</option>
                   {availableSlots.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -191,5 +222,4 @@ export default function BookSlot() {
     </div>
   );
 }
-
-
+  
