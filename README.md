@@ -1,70 +1,94 @@
-# Getting Started with Create React App
+# Smart Queue Management System (React + Supabase)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Production-ready template for a queue system with role-based dashboards, slot booking, SMS notifications, and live display.
 
-## Available Scripts
+## Features
+- Auth with Supabase (profiles with is_officer / is_admin)
+- Officer and citizen dashboards
+- Token generation with 30-minute slots, lunch break, capacity = 3 per service/slot
+- Disability priority flag (vision/hearing/mobility)
+- Live display (public) with realtime updates
+- SMS notifications via Supabase Edge Function (Twilio)
 
-In the project directory, you can run:
+## Prerequisites
+- Node 18+ and pnpm/npm
+- Supabase project
+- Twilio account (SMS-capable number)
 
-### `npm start`
+## Setup
+1) Install deps
+```
+npm install
+```
+2) Env (.env.local)
+```
+VITE_SUPABASE_URL=YOUR_URL
+VITE_SUPABASE_ANON_KEY=YOUR_ANON
+```
+3) Supabase SQL (run in SQL editor)
+- Apply the single setup schema at `supabase/migrations/00000000000000_full_schema.sql`.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+4) Edge Function
+- Create function `send-sms-notification` from `supabase/functions/send-sms-notification`
+- Set secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Develop
+```
+npm run dev
+```
+Open http://localhost:5000
 
-### `npm test`
+## Reset database (destructive)
+- Truncate key tables:
+```
+truncate table public.tokens restart identity cascade;
+truncate table public.counters restart identity cascade;
+truncate table public.notifications restart identity cascade;
+truncate table public.queue_stats restart identity cascade;
+truncate table public.profiles restart identity cascade;
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Notes
+- Replace favicon at `public/favicon.ico` (current is React logo).
+- This project removes vendor tags and example metadata.
 
-### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Follow these steps:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-### `npm run eject`
+# Step 3: Install the necessary dependencies.
+npm i
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+**Edit a file directly in GitHub**
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+**Use GitHub Codespaces**
 
-## Learn More
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## What technologies are used for this project?
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+This project is built with:
 
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
